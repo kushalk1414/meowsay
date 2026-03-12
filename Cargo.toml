@@ -5,5 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.102"
+assert_cmd = "2.2.0"
 clap = { version = "4.5.60", features = ["derive"] }
 colored = "3.1.1"
+predicates = "3.1.4"
