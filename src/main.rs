@@ -1,11 +1,13 @@
 // use std::env::args;
 use::colored::Colorize;
-use clap::Parser;
+use clap::{Parser};
+use anyhow::{Context, Result};
 
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let message_struct = Message::parse();
-    message_struct.print_cat();
+    message_struct.print_cat()?;
+    Ok(())
 
 }
 
@@ -21,18 +23,20 @@ struct Message {
 
 
 impl Message {
-    fn print_cat(&self) {
+    fn print_cat(&self) -> Result<String, Box<dyn std::error::Error>> {
         if self.message.to_lowercase() == "woof" {
-                eprintln!("A cat shouldn't bark like a dog.")
+                Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "A cat shouldn't bark like a dog.").into())
             }
         
           else {
                 let eye = if self.dead {"x"} else {"o"};
                 match &self.inputfile {
                     Some(path) => {
-                        let cat_template = std::fs::read_to_string(path)
-                        .expect(&format!("error reading the file at {:?}", path));
-
+                        let cat_template = std::fs::read_to_string(path).with_context(
+                            || format!("Could not read file {:?}", path)
+                            )?;
                         let eye = format!("{}", eye.red().bold());
                         let cat_picture = cat_template.replace("eye",
                         &eye);
@@ -41,17 +45,16 @@ impl Message {
                         self.message.bright_yellow().underline().on_purple()
                         );
                         println!("{}", &cat_picture);
+                        Ok(cat_picture)
                     }
 
                     None => {
-                        println!("{:?}", self.message);
-                        println!(" \\");
-                        println!("
-                        /\\_/\\");
-                        println!("
-                        ( {eye} {eye} )", eye=eye.red().bold());
-                        println!("
-                        =( I )=");
+                        let cat_base_template = " \\
+                            /\\_/\\
+                            ( {eye} {eye} )
+                            =( I )=".replace("eye",
+                        &eye);
+                        Ok(cat_base_template)
                     }
             }
         }
